@@ -55,7 +55,7 @@ class ImageTexture : public Texture<Treturn> {
     // ImageTexture Public Methods
     ImageTexture(std::unique_ptr<TextureMapping2D> m,
                  const std::string &filename, bool doTri, Float maxAniso,
-                 ImageWrap wm, Float scale, bool gamma);
+                 ImageWrap wm, Float scale, bool gamma, bool alpha);
     static void ClearCache() {
         textures.erase(textures.begin(), textures.end());
     }
@@ -72,7 +72,7 @@ class ImageTexture : public Texture<Treturn> {
     // ImageTexture Private Methods
     static MIPMap<Tmemory> *GetTexture(const std::string &filename,
                                        bool doTrilinear, Float maxAniso,
-                                       ImageWrap wm, Float scale, bool gamma);
+                                       ImageWrap wm, Float scale, bool gamma, bool alpha);
     static void convertIn(const RGBSpectrum &from, RGBSpectrum *to, Float scale,
                           bool gamma) {
         for (int i = 0; i < RGBSpectrum::nSamples; ++i)

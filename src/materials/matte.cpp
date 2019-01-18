@@ -51,7 +51,9 @@ void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 
     // Evaluate textures for _MatteMaterial_ material and allocate BRDF
     si->bsdf = ARENA_ALLOC(arena, BSDF)(*si);
-    Spectrum r = Kd->Evaluate(*si).Clamp()*tintMap->Evaluate(*si);
+    Spectrum r = Kd->Evaluate(*si).Clamp();
+    if (tintMap)
+        r *= tintMap->Evaluate(*si);
     Float sig = Clamp(sigma->Evaluate(*si), 0, 90);
     if (!r.IsBlack()) {
         if (sig == 0)
@@ -68,7 +70,7 @@ MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
     std::shared_ptr<Texture<Float>> bumpMap =
         mp.GetFloatTextureOrNull("bumpmap");
     std::shared_ptr<Texture<Spectrum>> tintMap =
-        mp.GetSpectrumTexture("tintMap", Spectrum(1.f));
+        mp.GetSpectrumTextureOrNull("tintMap");
     return new MatteMaterial(Kd, sigma, bumpMap, tintMap);
 }
 

@@ -51,7 +51,7 @@ static void WriteImageTGA(const std::string &name, const uint8_t *pixels,
                           int xOffset, int yOffset);
 static RGBSpectrum *ReadImageTGA(const std::string &name, int *w, int *h);
 static RGBSpectrum *ReadImagePNG(const std::string &name, int *w, int *h);
-static RGBSpectrum *ReadImagePNGAlpha(const std::string &name, int *w, int *h);
+static float *ReadImagePNGAlpha(const std::string &name, int *w, int *h);
 static bool WriteImagePFM(const std::string &filename, const Float *rgb,
                           int xres, int yres);
 static RGBSpectrum *ReadImagePFM(const std::string &filename, int *xres,
@@ -79,14 +79,15 @@ std::unique_ptr<RGBSpectrum[]> ReadImage(const std::string &name,
     return nullptr;
 }
 
-std::unique_ptr<float[]> ReadImageAlpha(const std::string &name,
+std::unique_ptr<Float[]> ReadImageAlpha(const std::string &name,
                                         Point2i *resolution) {
     if (HasExtension(name, ".png"))
-        return std::unique_ptr<float[]>(
+        return std::unique_ptr<Float[]>(
             ReadImagePNGAlpha(name, &resolution->x, &resolution->y));
     Error("Unable to load image stored in format \"%s\" for filename \"%s\".",
           strrchr(name.c_str(), '.') ? (strrchr(name.c_str(), '.') + 1)
                                      : "(unknown)",
+          name.c_str());
     return nullptr;
 }
 

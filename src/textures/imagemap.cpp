@@ -43,16 +43,16 @@ template <typename Tmemory, typename Treturn>
 ImageTexture<Tmemory, Treturn>::ImageTexture(
     std::unique_ptr<TextureMapping2D> mapping, const std::string &filename,
     bool doTrilinear, Float maxAniso, ImageWrap wrapMode, Float scale,
-    bool gamma, bool _alpha)
-    : mapping(std::move(mapping)alpha), alpha(_alpha) {
+    bool gamma, bool alpha)
+    : mapping(std::move(mapping)){
     mipmap =
-        GetTexture(filename, doTrilinear, maxAniso, wrapMode, scale, gamma);
+        GetTexture(filename, doTrilinear, maxAniso, wrapMode, scale, gamma, alpha);
 }
 
 template <typename Tmemory, typename Treturn>
 MIPMap<Tmemory> *ImageTexture<Tmemory, Treturn>::GetTexture(
     const std::string &filename, bool doTrilinear, Float maxAniso,
-    ImageWrap wrap, Float scale, bool gamma) {
+    ImageWrap wrap, Float scale, bool gamma, bool alpha) {
     // Return _MIPMap_ from texture cache if present
     TexInfo texInfo(filename, doTrilinear, maxAniso, wrap, scale, gamma);
     if (textures.find(texInfo) != textures.end())

@@ -1,5 +1,5 @@
 // shapes/quad.cpp*
-#include "shapes/cone.h"
+#include "shapes/quad.h"
 #include "paramset.h"
 #include "efloat.h"
 #include "stats.h"
@@ -43,7 +43,8 @@ bool QuadX::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     return true;
 }
 
-Interaction QuadX::Sample(const Point2f &u, Float *pdf) const {
+Interaction QuadX::Sample(const Point2f &_u, Float *pdf) const {
+    Float u = _u.x, v = _u.y;
     Point3f pObj(0, ((u-u0)/Du-.5)*l1, ((v-v0)/Dv-.5)*l2);
     Interaction it;
     it.n = Normalize((*ObjectToWorld)(Normal3f(dir, 0, 0)));
@@ -53,10 +54,10 @@ Interaction QuadX::Sample(const Point2f &u, Float *pdf) const {
     return it;
 }
 
-static std::shared_ptr<Quad> CreateQuadShape(const Transform *o2w,
-                                             const Transform *w2o,
-                                             bool reverseOrientation,
-                                             const ParamSet &params) {
+static Quad *CreateQuadShape(const Transform *o2w,
+                             const Transform *w2o,
+                             bool reverseOrientation,
+                             const ParamSet &params) {
     Float l1 = params.FindOneFloat("l1", 1);
     Float l2 = params.FindOneFloat("l2", 1);
     Float u0  = params.FindOneFloat("u0", 0);
@@ -72,7 +73,8 @@ std::shared_ptr<QuadX> CreateQuadXShape(const Transform *o2w,
                                         const Transform *w2o,
                                         bool reverseOrientation,
                                         const ParamSet &params) {
-    return CreateQuadShape(o2w, w2o, reverseOrientation, params);
+    return std::shared_ptr<QuadX>(
+               (QuadX*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
 }
 
 }  // namespace pbrt

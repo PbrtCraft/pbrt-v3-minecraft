@@ -51,7 +51,7 @@ class MatteMaterial : public Material {
     MatteMaterial(const std::shared_ptr<Texture<Spectrum>> &Kd,
                   const std::shared_ptr<Texture<Float>> &sigma,
                   const std::shared_ptr<Texture<Float>> &bumpMap,
-                  const std::shared_ptr<Texture<Float>> &tintMap)
+                  const std::shared_ptr<Texture<Spectrum>> &tintMap = nullptr)
         : Kd(Kd), sigma(sigma), bumpMap(bumpMap), tintMap(tintMap) { }
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
