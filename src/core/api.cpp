@@ -99,6 +99,7 @@
 #include "shapes/sphere.h"
 #include "shapes/triangle.h"
 #include "shapes/plymesh.h"
+#include "shapes/quad.h"
 #include "textures/bilerp.h"
 #include "textures/checkerboard.h"
 #include "textures/constant.h"
@@ -453,6 +454,15 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
     else if (name == "hyperboloid")
         s = CreateHyperboloidShape(object2world, world2object,
                                    reverseOrientation, paramSet);
+    else if (name == "quadx")
+        s = CreateQuadXShape(object2world, world2object, reverseOrientation,
+                             paramSet);
+    else if (name == "quady")
+        s = CreateQuadYShape(object2world, world2object, reverseOrientation,
+                             paramSet);
+    else if (name == "quadz")
+        s = CreateQuadZShape(object2world, world2object, reverseOrientation,
+                             paramSet);
     if (s != nullptr) shapes.push_back(s);
 
     // Create multiple-_Shape_ types

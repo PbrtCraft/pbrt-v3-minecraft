@@ -21,7 +21,7 @@ bool QuadX::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
 
     Point3f phit = ray(thit);
     if (not inRange(phit.y, phit.z))
-      return false;
+        return false;
 
     Float u = phit.y/l1 +.5, v = phit.z/l2 +.5;
     u = Du*u + u0, v = Dv*v + v0;
@@ -54,6 +54,102 @@ Interaction QuadX::Sample(const Point2f &_u, Float *pdf) const {
     return it;
 }
 
+bool QuadY::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
+                     bool testAlphaTexture) const {
+    // Transform _Ray_ to object space
+    ProfilePhase p(Prof::ShapeIntersect);
+    Vector3f oErr, dErr;
+    Ray ray = (*WorldToObject)(r, &oErr, &dErr);
+
+    if(ray.d.y == 0) return false;
+
+    Float thit = -ray.o.y/ray.d.y;
+    if (thit <= 0 or thit >= ray.tMax)
+        return false;
+
+    Point3f phit = ray(thit);
+    if (not inRange(phit.x, phit.z))
+        return false;
+
+    Float u = phit.x/l1 +.5, v = phit.z/l2 +.5;
+    u = Du*u + u0, v = Dv*v + v0;
+
+    // Initialize _DifferentialGeometry_ from parametric information
+    Vector3f dpdv(0, 0, l2/Dv), dpdu(l1/Du, 0, 0);
+    Normal3f dn(0, 0, 0);
+
+    // Compute error bounds for disk intersection
+    Vector3f pError(0, 0, 0);
+
+    // Initialize _SurfaceInteraction_ from parametric information
+    *isect = (*ObjectToWorld)(SurfaceInteraction(phit, pError, Point2f(v, u),
+                                                 -ray.d, dpdv, dpdu, dn, dn,
+                                                 ray.time, this));
+
+    // Update _tHit_
+    *tHit = thit;
+    return true;
+}
+
+Interaction QuadY::Sample(const Point2f &_u, Float *pdf) const {
+    Float u = _u.x, v = _u.y;
+    Point3f pObj(((u-u0)/Du-.5)*l1, 0, ((v-v0)/Dv-.5)*l2);
+    Interaction it;
+    it.n = Normalize((*ObjectToWorld)(Normal3f(0, dir, 0)));
+    if (reverseOrientation) it.n *= -1;
+    it.p = (*ObjectToWorld)(pObj, Vector3f(0, 0, 0), &it.pError);
+    *pdf = 1 / Area();
+    return it;
+}
+
+bool QuadZ::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
+                     bool testAlphaTexture) const {
+    // Transform _Ray_ to object space
+    ProfilePhase p(Prof::ShapeIntersect);
+    Vector3f oErr, dErr;
+    Ray ray = (*WorldToObject)(r, &oErr, &dErr);
+
+    if(ray.d.z == 0) return false;
+
+    Float thit = -ray.o.z/ray.d.z;
+    if (thit <= 0 or thit >= ray.tMax)
+        return false;
+
+    Point3f phit = ray(thit);
+    if (not inRange(phit.y, phit.x))
+        return false;
+
+    Float u = phit.y/l1 +.5, v = phit.x/l2 +.5;
+    u = Du*u + u0, v = Dv*v + v0;
+
+    // Initialize _DifferentialGeometry_ from parametric information
+    Vector3f dpdv(l2/Dv, 0, 0), dpdu(0, l1/Du, 0);
+    Normal3f dn(0, 0, 0);
+
+    // Compute error bounds for disk intersection
+    Vector3f pError(0, 0, 0);
+
+    // Initialize _SurfaceInteraction_ from parametric information
+    *isect = (*ObjectToWorld)(SurfaceInteraction(phit, pError, Point2f(v, u),
+                                                 -ray.d, dpdv, dpdu, dn, dn,
+                                                 ray.time, this));
+
+    // Update _tHit_
+    *tHit = thit;
+    return true;
+}
+
+Interaction QuadZ::Sample(const Point2f &_u, Float *pdf) const {
+    Float u = _u.x, v = _u.y;
+    Point3f pObj(((v-v0)/Dv-.5)*l2, ((u-u0)/Du-.5)*l1, 0);
+    Interaction it;
+    it.n = Normalize((*ObjectToWorld)(Normal3f(0, 0, dir)));
+    if (reverseOrientation) it.n *= -1;
+    it.p = (*ObjectToWorld)(pObj, Vector3f(0, 0, 0), &it.pError);
+    *pdf = 1 / Area();
+    return it;
+}
+
 static Quad *CreateQuadShape(const Transform *o2w,
                              const Transform *w2o,
                              bool reverseOrientation,
@@ -75,6 +171,22 @@ std::shared_ptr<QuadX> CreateQuadXShape(const Transform *o2w,
                                         const ParamSet &params) {
     return std::shared_ptr<QuadX>(
                (QuadX*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
+}
+
+std::shared_ptr<QuadY> CreateQuadYShape(const Transform *o2w,
+                                        const Transform *w2o,
+                                        bool reverseOrientation,
+                                        const ParamSet &params) {
+    return std::shared_ptr<QuadY>(
+               (QuadY*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
+}
+
+std::shared_ptr<QuadZ> CreateQuadZShape(const Transform *o2w,
+                                        const Transform *w2o,
+                                        bool reverseOrientation,
+                                        const ParamSet &params) {
+    return std::shared_ptr<QuadZ>(
+               (QuadZ*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
 }
 
 }  // namespace pbrt

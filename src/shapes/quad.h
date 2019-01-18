@@ -58,7 +58,35 @@ class QuadX : public Quad {
     Interaction Sample(const Point2f &u, Float *pdf) const;
 };
 
+// QuadY Deckarations
+class QuadY : public Quad {
+  public:
+  // QuadX Public Method
+    bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
+                   bool testAlphaTexture) const;
+    Interaction Sample(const Point2f &u, Float *pdf) const;
+};
+
+// QuadZ Deckarations
+class QuadZ : public Quad {
+  public:
+  // QuadX Public Method
+    bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
+                   bool testAlphaTexture) const;
+    Interaction Sample(const Point2f &u, Float *pdf) const;
+};
+
 std::shared_ptr<QuadX> CreateQuadXShape(const Transform *o2w,
+                                        const Transform *w2o,
+                                        bool reverseOrientation,
+                                        const ParamSet &params);
+
+std::shared_ptr<QuadY> CreateQuadYShape(const Transform *o2w,
+                                        const Transform *w2o,
+                                        bool reverseOrientation,
+                                        const ParamSet &params);
+
+std::shared_ptr<QuadZ> CreateQuadZShape(const Transform *o2w,
                                         const Transform *w2o,
                                         bool reverseOrientation,
                                         const ParamSet &params);
