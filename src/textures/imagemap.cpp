@@ -43,8 +43,8 @@ template <typename Tmemory, typename Treturn>
 ImageTexture<Tmemory, Treturn>::ImageTexture(
     std::unique_ptr<TextureMapping2D> mapping, const std::string &filename,
     bool doTrilinear, Float maxAniso, ImageWrap wrapMode, Float scale,
-    bool gamma)
-    : mapping(std::move(mapping)) {
+    bool gamma, bool _alpha)
+    : mapping(std::move(mapping)alpha), alpha(_alpha) {
     mipmap =
         GetTexture(filename, doTrilinear, maxAniso, wrapMode, scale, gamma);
 }
@@ -61,41 +61,82 @@ MIPMap<Tmemory> *ImageTexture<Tmemory, Treturn>::GetTexture(
     // Create _MIPMap_ for _filename_
     ProfilePhase _(Prof::TextureLoading);
     Point2i resolution;
-    std::unique_ptr<RGBSpectrum[]> texels = ReadImage(filename, &resolution);
-    if (!texels) {
-        Warning("Creating a constant grey texture to replace \"%s\".",
-                filename.c_str());
-        resolution.x = resolution.y = 1;
-        RGBSpectrum *rgb = new RGBSpectrum[1];
-        *rgb = RGBSpectrum(0.5f);
-        texels.reset(rgb);
-    }
 
-    // Flip image in y; texture coordinate space has (0,0) at the lower
-    // left corner.
-    for (int y = 0; y < resolution.y / 2; ++y)
-        for (int x = 0; x < resolution.x; ++x) {
-            int o1 = y * resolution.x + x;
-            int o2 = (resolution.y - 1 - y) * resolution.x + x;
-            std::swap(texels[o1], texels[o2]);
+    if (alpha) {
+        // Load PNG alpha part
+        std::unique_ptr<Float[]> texels = ReadImageAlpha(filename, &resolution);
+        if (!texels) {
+            Warning("Creating a constant grey texture to replace \"%s\".",
+                    filename.c_str());
+            resolution.x = resolution.y = 1;
+            Float *rgb = new Float[1];
+            *rgb = 0.5;
+            texels.reset(rgb);
         }
 
-    MIPMap<Tmemory> *mipmap = nullptr;
-    if (texels) {
-        // Convert texels to type _Tmemory_ and create _MIPMap_
-        std::unique_ptr<Tmemory[]> convertedTexels(
-            new Tmemory[resolution.x * resolution.y]);
-        for (int i = 0; i < resolution.x * resolution.y; ++i)
-            convertIn(texels[i], &convertedTexels[i], scale, gamma);
-        mipmap = new MIPMap<Tmemory>(resolution, convertedTexels.get(),
-                                     doTrilinear, maxAniso, wrap);
+        // Flip image in y; texture coordinate space has (0,0) at the lower
+        // left corner.
+        for (int y = 0; y < resolution.y / 2; ++y)
+            for (int x = 0; x < resolution.x; ++x) {
+                int o1 = y * resolution.x + x;
+                int o2 = (resolution.y - 1 - y) * resolution.x + x;
+                std::swap(texels[o1], texels[o2]);
+            }
+
+        MIPMap<Tmemory> *mipmap = nullptr;
+        if (texels) {
+            // Convert texels to type _Tmemory_ and create _MIPMap_
+            std::unique_ptr<Tmemory[]> convertedTexels(
+                new Tmemory[resolution.x * resolution.y]);
+            for (int i = 0; i < resolution.x * resolution.y; ++i)
+                convertIn(texels[i], &convertedTexels[i], scale, gamma);
+            mipmap = new MIPMap<Tmemory>(resolution, convertedTexels.get(),
+                                         doTrilinear, maxAniso, wrap);
+        } else {
+            // Create one-valued _MIPMap_
+            Tmemory oneVal = scale;
+            mipmap = new MIPMap<Tmemory>(Point2i(1, 1), &oneVal);
+        }
+        textures[texInfo].reset(mipmap);
+        return mipmap;
+
     } else {
-        // Create one-valued _MIPMap_
-        Tmemory oneVal = scale;
-        mipmap = new MIPMap<Tmemory>(Point2i(1, 1), &oneVal);
+        std::unique_ptr<RGBSpectrum[]> texels = ReadImage(filename, &resolution);
+        if (!texels) {
+            Warning("Creating a constant grey texture to replace \"%s\".",
+                    filename.c_str());
+            resolution.x = resolution.y = 1;
+            RGBSpectrum *rgb = new RGBSpectrum[1];
+            *rgb = RGBSpectrum(0.5f);
+            texels.reset(rgb);
+        }
+
+        // Flip image in y; texture coordinate space has (0,0) at the lower
+        // left corner.
+        for (int y = 0; y < resolution.y / 2; ++y)
+            for (int x = 0; x < resolution.x; ++x) {
+                int o1 = y * resolution.x + x;
+                int o2 = (resolution.y - 1 - y) * resolution.x + x;
+                std::swap(texels[o1], texels[o2]);
+            }
+
+        MIPMap<Tmemory> *mipmap = nullptr;
+        if (texels) {
+            // Convert texels to type _Tmemory_ and create _MIPMap_
+            std::unique_ptr<Tmemory[]> convertedTexels(
+                new Tmemory[resolution.x * resolution.y]);
+            for (int i = 0; i < resolution.x * resolution.y; ++i)
+                convertIn(texels[i], &convertedTexels[i], scale, gamma);
+            mipmap = new MIPMap<Tmemory>(resolution, convertedTexels.get(),
+                                         doTrilinear, maxAniso, wrap);
+        } else {
+            // Create one-valued _MIPMap_
+            Tmemory oneVal = scale;
+            mipmap = new MIPMap<Tmemory>(Point2i(1, 1), &oneVal);
+        }
+        textures[texInfo].reset(mipmap);
+        return mipmap;
     }
-    textures[texInfo].reset(mipmap);
-    return mipmap;
 }
 
 template <typename Tmemory, typename Treturn>
@@ -139,8 +180,9 @@ ImageTexture<Float, Float> *CreateImageFloatTexture(const Transform &tex2world,
     std::string filename = tp.FindFilename("filename");
     bool gamma = tp.FindBool("gamma", HasExtension(filename, ".tga") ||
                                           HasExtension(filename, ".png"));
+    bool alpha = tp.FindBool("alpha", false);
     return new ImageTexture<Float, Float>(std::move(map), filename, trilerp,
-                                          maxAniso, wrapMode, scale, gamma);
+                                          maxAniso, wrapMode, scale, gamma, alpha);
 }
 
 ImageTexture<RGBSpectrum, Spectrum> *CreateImageSpectrumTexture(
@@ -181,8 +223,9 @@ ImageTexture<RGBSpectrum, Spectrum> *CreateImageSpectrumTexture(
     std::string filename = tp.FindFilename("filename");
     bool gamma = tp.FindBool("gamma", HasExtension(filename, ".tga") ||
                                           HasExtension(filename, ".png"));
+    bool alpha = tp.FindBool("alpha", false);
     return new ImageTexture<RGBSpectrum, Spectrum>(
-        std::move(map), filename, trilerp, maxAniso, wrapMode, scale, gamma);
+        std::move(map), filename, trilerp, maxAniso, wrapMode, scale, gamma, alpha);
 }
 
 template class ImageTexture<Float, Float>;

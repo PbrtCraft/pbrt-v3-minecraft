@@ -51,6 +51,7 @@ static void WriteImageTGA(const std::string &name, const uint8_t *pixels,
                           int xOffset, int yOffset);
 static RGBSpectrum *ReadImageTGA(const std::string &name, int *w, int *h);
 static RGBSpectrum *ReadImagePNG(const std::string &name, int *w, int *h);
+static RGBSpectrum *ReadImagePNGAlpha(const std::string &name, int *w, int *h);
 static bool WriteImagePFM(const std::string &filename, const Float *rgb,
                           int xres, int yres);
 static RGBSpectrum *ReadImagePFM(const std::string &filename, int *xres,
@@ -75,6 +76,17 @@ std::unique_ptr<RGBSpectrum[]> ReadImage(const std::string &name,
           strrchr(name.c_str(), '.') ? (strrchr(name.c_str(), '.') + 1)
                                      : "(unknown)",
           name.c_str());
+    return nullptr;
+}
+
+std::unique_ptr<float[]> ReadImageAlpha(const std::string &name,
+                                        Point2i *resolution) {
+    if (HasExtension(name, ".png"))
+        return std::unique_ptr<float[]>(
+            ReadImagePNGAlpha(name, &resolution->x, &resolution->y));
+    Error("Unable to load image stored in format \"%s\" for filename \"%s\".",
+          strrchr(name.c_str(), '.') ? (strrchr(name.c_str(), '.') + 1)
+                                     : "(unknown)",
     return nullptr;
 }
 
@@ -260,6 +272,43 @@ static RGBSpectrum *ReadImagePNG(const std::string &name, int *width,
     unsigned char *rgb;
     unsigned w, h;
     unsigned int error = lodepng_decode24_file(&rgb, &w, &h, name.c_str());
+    unsigned int ch = 3;
+    if (error != 0) {
+        error = lodepng_decode32_file(&rgb, &w, &h, name.c_str());
+        ch = 4;
+        if(error != 0) {
+            Error("Error reading PNG \"%s\": %s", name.c_str(),
+                  lodepng_error_text(error));
+            return nullptr;
+        }
+    }
+    *width = w;
+    *height = h;
+
+    RGBSpectrum *ret = new RGBSpectrum[*width * *height];
+    unsigned char *src = rgb;
+    for (unsigned int y = 0; y < h; ++y) {
+        for (unsigned int x = 0; x < w; ++x, src += ch) {
+            Float c[3];
+            c[0] = src[0] / 255.f;
+            c[1] = src[1] / 255.f;
+            c[2] = src[2] / 255.f;
+            ret[y * *width + x] = RGBSpectrum::FromRGB(c);
+        }
+    }
+
+    free(rgb);
+    LOG(INFO) << StringPrintf("Read PNG image %s (%d x %d)",
+                              name.c_str(), *width, *height);
+    return ret;
+}
+
+static float *ReadImagePNGAlpha(const std::string &name, int *width,
+                                 int *height) {
+    unsigned char *rgb;
+    unsigned w, h;
+    unsigned int error = lodepng_decode32_file(&rgb, &w, &h, name.c_str());
+    unsigned int ch = 4;
     if (error != 0) {
         Error("Error reading PNG \"%s\": %s", name.c_str(),
               lodepng_error_text(error));
@@ -268,15 +317,11 @@ static RGBSpectrum *ReadImagePNG(const std::string &name, int *width,
     *width = w;
     *height = h;
 
-    RGBSpectrum *ret = new RGBSpectrum[*width * *height];
+    float *ret = new float[*width * *height];
     unsigned char *src = rgb;
     for (unsigned int y = 0; y < h; ++y) {
-        for (unsigned int x = 0; x < w; ++x, src += 3) {
-            Float c[3];
-            c[0] = src[0] / 255.f;
-            c[1] = src[1] / 255.f;
-            c[2] = src[2] / 255.f;
-            ret[y * *width + x] = RGBSpectrum::FromRGB(c);
+        for (unsigned int x = 0; x < w; ++x, src += ch) {
+            ret[y * *width + x] = (*src)/255.;
         }
     }
 

@@ -48,6 +48,10 @@ namespace pbrt {
 // ImageIO Declarations
 std::unique_ptr<RGBSpectrum[]> ReadImage(const std::string &name,
                                          Point2i *resolution);
+
+std::unique_ptr<Float[]> ReadImageAlpha(const std::string &name,
+                                         Point2i *resolution);
+
 RGBSpectrum *ReadImageEXR(const std::string &name, int *width,
                           int *height, Bounds2i *dataWindow = nullptr,
                           Bounds2i *displayWindow = nullptr);

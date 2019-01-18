@@ -43,35 +43,10 @@
 #include "texture.h"
 #include "mipmap.h"
 #include "paramset.h"
+#include "textures/texinfo.h"
 #include <map>
 
 namespace pbrt {
-
-// TexInfo Declarations
-struct TexInfo {
-    TexInfo(const std::string &f, bool dt, Float ma, ImageWrap wm, Float sc,
-            bool gamma)
-        : filename(f),
-          doTrilinear(dt),
-          maxAniso(ma),
-          wrapMode(wm),
-          scale(sc),
-          gamma(gamma) {}
-    std::string filename;
-    bool doTrilinear;
-    Float maxAniso;
-    ImageWrap wrapMode;
-    Float scale;
-    bool gamma;
-    bool operator<(const TexInfo &t2) const {
-        if (filename != t2.filename) return filename < t2.filename;
-        if (doTrilinear != t2.doTrilinear) return doTrilinear < t2.doTrilinear;
-        if (maxAniso != t2.maxAniso) return maxAniso < t2.maxAniso;
-        if (scale != t2.scale) return scale < t2.scale;
-        if (gamma != t2.gamma) return !gamma;
-        return wrapMode < t2.wrapMode;
-    }
-};
 
 // ImageTexture Declarations
 template <typename Tmemory, typename Treturn>
@@ -103,6 +78,13 @@ class ImageTexture : public Texture<Treturn> {
         for (int i = 0; i < RGBSpectrum::nSamples; ++i)
             (*to)[i] = scale * (gamma ? InverseGammaCorrect(from[i]) : from[i]);
     }
+    static void convertIn(const Float &from, RGBSpectrum *to, Float scale,
+                          bool gamma) {
+        Float rgb[3] = {from, from, from};
+        *to = Spectrum::FromRGB(rgb);
+        for (int i = 0; i < RGBSpectrum::nSamples; ++i)
+            (*to)[i] = scale * (gamma ? InverseGammaCorrect((*to)[i]) : (*to)[i]);
+    }
     static void convertIn(const RGBSpectrum &from, Float *to, Float scale,
                           bool gamma) {
         *to = scale * (gamma ? InverseGammaCorrect(from.y()) : from.y());
@@ -118,6 +100,8 @@ class ImageTexture : public Texture<Treturn> {
     std::unique_ptr<TextureMapping2D> mapping;
     MIPMap<Tmemory> *mipmap;
     static std::map<TexInfo, std::unique_ptr<MIPMap<Tmemory>>> textures;
+
+    bool alpha;
 };
 
 extern template class ImageTexture<Float, Float>;
