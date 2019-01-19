@@ -53,6 +53,10 @@ class Quad : public Shape {
 class QuadX : public Quad {
   public:
   // QuadX Public Method
+    QuadX(const Transform *o2w, const Transform *w2o, bool ro,
+          Float l1, Float l2, Float dir,
+          Float u0, Float v0, Float u1, Float v1):
+          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1) { }
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
     Interaction Sample(const Point2f &u, Float *pdf) const;
@@ -62,6 +66,10 @@ class QuadX : public Quad {
 class QuadY : public Quad {
   public:
   // QuadX Public Method
+    QuadY(const Transform *o2w, const Transform *w2o, bool ro,
+          Float l1, Float l2, Float dir,
+          Float u0, Float v0, Float u1, Float v1):
+          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1) { }
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
     Interaction Sample(const Point2f &u, Float *pdf) const;
@@ -71,6 +79,10 @@ class QuadY : public Quad {
 class QuadZ : public Quad {
   public:
   // QuadX Public Method
+    QuadZ(const Transform *o2w, const Transform *w2o, bool ro,
+          Float l1, Float l2, Float dir,
+          Float u0, Float v0, Float u1, Float v1):
+          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1) { }
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
     Interaction Sample(const Point2f &u, Float *pdf) const;

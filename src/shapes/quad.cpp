@@ -150,10 +150,11 @@ Interaction QuadZ::Sample(const Point2f &_u, Float *pdf) const {
     return it;
 }
 
-static Quad *CreateQuadShape(const Transform *o2w,
-                             const Transform *w2o,
-                             bool reverseOrientation,
-                             const ParamSet &params) {
+template<class T>
+static std::shared_ptr<T> CreateQuadShape(const Transform *o2w,
+                                          const Transform *w2o,
+                                          bool reverseOrientation,
+                                          const ParamSet &params) {
     Float l1 = params.FindOneFloat("l1", 1);
     Float l2 = params.FindOneFloat("l2", 1);
     Float u0  = params.FindOneFloat("u0", 0);
@@ -161,32 +162,29 @@ static Quad *CreateQuadShape(const Transform *o2w,
     Float u1  = params.FindOneFloat("u1", 1);
     Float v1  = params.FindOneFloat("v1", 1);
     Float dir = params.FindOneFloat("dir", 1);
-    return new Quad(o2w, w2o, reverseOrientation, l1, l2, dir,
-                     u0, v0, u1, v1);
+    return std::make_shared<T>(o2w, w2o, reverseOrientation, l1, l2, dir,
+                               u0, v0, u1, v1);
 }
 
 std::shared_ptr<QuadX> CreateQuadXShape(const Transform *o2w,
                                         const Transform *w2o,
                                         bool reverseOrientation,
                                         const ParamSet &params) {
-    return std::shared_ptr<QuadX>(
-               (QuadX*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
+    return CreateQuadShape<QuadX>(o2w, w2o, reverseOrientation, params);
 }
 
 std::shared_ptr<QuadY> CreateQuadYShape(const Transform *o2w,
                                         const Transform *w2o,
                                         bool reverseOrientation,
                                         const ParamSet &params) {
-    return std::shared_ptr<QuadY>(
-               (QuadY*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
+    return CreateQuadShape<QuadY>(o2w, w2o, reverseOrientation, params);
 }
 
 std::shared_ptr<QuadZ> CreateQuadZShape(const Transform *o2w,
                                         const Transform *w2o,
                                         bool reverseOrientation,
                                         const ParamSet &params) {
-    return std::shared_ptr<QuadZ>(
-               (QuadZ*)CreateQuadShape(o2w, w2o, reverseOrientation, params));
+    return CreateQuadShape<QuadZ>(o2w, w2o, reverseOrientation, params);
 }
 
 }  // namespace pbrt
