@@ -17,9 +17,11 @@ class Quad : public Shape {
     // Quad Public Method
     Quad(const Transform *o2w, const Transform *w2o, bool ro,
          Float l1, Float l2, Float dir,
-         Float u0, Float v0, Float u1, Float v1):
+         Float u0, Float v0, Float u1, Float v1,
+         const std::shared_ptr<Texture<Float>> &alphaMask):
           Shape(o2w, w2o, ro), l1(l1), l2(l2), dir(dir),
           u0(u0), v0(v0), u1(u1), v1(v1),
+          alphaMask(alphaMask),
           Du(u1 - u0), Dv(v1 - v0) { } ;
 
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
@@ -47,6 +49,8 @@ class Quad : public Shape {
         return -l1/2 <= x and x <= l1/2 and
                -l2/2 <= y and y <= l2/2;
     }
+
+    std::shared_ptr<Texture<Float>> alphaMask;
 };
 
 // QuadX Deckarations
@@ -55,8 +59,9 @@ class QuadX : public Quad {
   // QuadX Public Method
     QuadX(const Transform *o2w, const Transform *w2o, bool ro,
           Float l1, Float l2, Float dir,
-          Float u0, Float v0, Float u1, Float v1):
-          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1) { }
+          Float u0, Float v0, Float u1, Float v1,
+          const std::shared_ptr<Texture<Float>> &alphaMask):
+          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1, alphaMask) { }
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
     Interaction Sample(const Point2f &u, Float *pdf) const;
@@ -68,8 +73,9 @@ class QuadY : public Quad {
   // QuadX Public Method
     QuadY(const Transform *o2w, const Transform *w2o, bool ro,
           Float l1, Float l2, Float dir,
-          Float u0, Float v0, Float u1, Float v1):
-          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1) { }
+          Float u0, Float v0, Float u1, Float v1,
+          const std::shared_ptr<Texture<Float>> &alphaMask):
+          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1, alphaMask) { }
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
     Interaction Sample(const Point2f &u, Float *pdf) const;
@@ -81,27 +87,28 @@ class QuadZ : public Quad {
   // QuadX Public Method
     QuadZ(const Transform *o2w, const Transform *w2o, bool ro,
           Float l1, Float l2, Float dir,
-          Float u0, Float v0, Float u1, Float v1):
-          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1) { }
+          Float u0, Float v0, Float u1, Float v1,
+          const std::shared_ptr<Texture<Float>> &alphaMask):
+          Quad(o2w, w2o, ro, l1, l2, dir, u0, v0, u1, v1, alphaMask) { }
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
     Interaction Sample(const Point2f &u, Float *pdf) const;
 };
 
-std::shared_ptr<QuadX> CreateQuadXShape(const Transform *o2w,
-                                        const Transform *w2o,
-                                        bool reverseOrientation,
-                                        const ParamSet &params);
+std::shared_ptr<QuadX> CreateQuadXShape(
+    const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+    const ParamSet &params,
+    std::map<std::string, std::shared_ptr<Texture<Float>>> *floatTextures);
 
-std::shared_ptr<QuadY> CreateQuadYShape(const Transform *o2w,
-                                        const Transform *w2o,
-                                        bool reverseOrientation,
-                                        const ParamSet &params);
+std::shared_ptr<QuadY> CreateQuadYShape(
+    const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+    const ParamSet &params,
+    std::map<std::string, std::shared_ptr<Texture<Float>>> *floatTextures);
 
-std::shared_ptr<QuadZ> CreateQuadZShape(const Transform *o2w,
-                                        const Transform *w2o,
-                                        bool reverseOrientation,
-                                        const ParamSet &params);
+std::shared_ptr<QuadZ> CreateQuadZShape(
+    const Transform *o2w, const Transform *w2o, bool reverseOrientation,
+    const ParamSet &params,
+    std::map<std::string, std::shared_ptr<Texture<Float>>> *floatTextures);
 
 }  // namespace pbrt
 

@@ -456,13 +456,13 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
                                    reverseOrientation, paramSet);
     else if (name == "quadx")
         s = CreateQuadXShape(object2world, world2object, reverseOrientation,
-                             paramSet);
+                             paramSet, &*graphicsState.floatTextures);
     else if (name == "quady")
         s = CreateQuadYShape(object2world, world2object, reverseOrientation,
-                             paramSet);
+                             paramSet, &*graphicsState.floatTextures);
     else if (name == "quadz")
         s = CreateQuadZShape(object2world, world2object, reverseOrientation,
-                             paramSet);
+                             paramSet, &*graphicsState.floatTextures);
     if (s != nullptr) shapes.push_back(s);
 
     // Create multiple-_Shape_ types
