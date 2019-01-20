@@ -8,6 +8,7 @@ namespace pbrt {
 
 bool QuadX::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
                      bool testAlphaTexture) const {
+    LOG(INFO) << "QuadX intersect test";
     // Transform _Ray_ to object space
     ProfilePhase p(Prof::ShapeIntersect);
     Vector3f oErr, dErr;
@@ -22,6 +23,10 @@ bool QuadX::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     Point3f phit = ray(thit);
     if (not inRange(phit.y, phit.z))
         return false;
+    
+    // For IntersectP
+    if (isect == nullptr)
+        return true;
 
     Float u = phit.y/l1 +.5, v = phit.z/l2 +.5;
     u = Du*u + u0, v = Dv*v + v0;
@@ -71,6 +76,10 @@ bool QuadY::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     if (not inRange(phit.x, phit.z))
         return false;
 
+    // For IntersectP
+    if (isect == nullptr)
+        return true;
+
     Float u = phit.x/l1 +.5, v = phit.z/l2 +.5;
     u = Du*u + u0, v = Dv*v + v0;
 
@@ -118,6 +127,10 @@ bool QuadZ::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     Point3f phit = ray(thit);
     if (not inRange(phit.y, phit.x))
         return false;
+
+    // For IntersectP
+    if (isect == nullptr)
+        return true;
 
     Float u = phit.y/l1 +.5, v = phit.x/l2 +.5;
     u = Du*u + u0, v = Dv*v + v0;
