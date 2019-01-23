@@ -43,40 +43,40 @@ std::vector<std::shared_ptr<Shape>> CreateHeightfield(
     const Transform *ObjectToWorld, const Transform *WorldToObject,
     bool reverseOrientation, const ParamSet &params) {
     int nx = params.FindOneInt("nu", -1);
-    int ny = params.FindOneInt("nv", -1);
+    int nz = params.FindOneInt("nv", -1);
     int nitems;
-    const Float *z = params.FindFloat("Pz", &nitems);
-    CHECK_EQ(nitems, nx * ny);
-    CHECK(nx != -1 && ny != -1 && z != nullptr);
+    const Float *y = params.FindFloat("Py", &nitems);
+    CHECK_EQ(nitems, nx * nz);
+    CHECK(nx != -1 && nz != -1 && y != nullptr);
 
-    int ntris = 2 * (nx - 1) * (ny - 1);
+    int ntris = 2 * (nx - 1) * (nz - 1);
     std::unique_ptr<int[]> indices(new int[3 * ntris]);
-    std::unique_ptr<Point3f[]> P(new Point3f[nx * ny]);
-    std::unique_ptr<Point2f[]> uvs(new Point2f[nx * ny]);
-    int nverts = nx * ny;
+    std::unique_ptr<Point3f[]> P(new Point3f[nx * nz]);
+    std::unique_ptr<Point2f[]> uvs(new Point2f[nx * nz]);
+    int nverts = nx * nz;
     // Compute heightfield vertex positions
     int pos = 0;
-    for (int y = 0; y < ny; ++y) {
+    for (int z = 0; z < nz; ++z) {
         for (int x = 0; x < nx; ++x) {
             P[pos].x = uvs[pos].x = (float)x / (float)(nx - 1);
-            P[pos].y = uvs[pos].y = (float)y / (float)(ny - 1);
-            P[pos].z = z[pos];
+            P[pos].z = uvs[pos].y = (float)z / (float)(nz - 1);
+            P[pos].y = y[pos];
             ++pos;
         }
     }
 
     // Fill in heightfield vertex offset array
     int *vp = indices.get();
-    for (int y = 0; y < ny - 1; ++y) {
+    for (int z = 0; z < nz - 1; ++z) {
         for (int x = 0; x < nx - 1; ++x) {
 #define VERT(x, y) ((x) + (y)*nx)
-            *vp++ = VERT(x, y);
-            *vp++ = VERT(x + 1, y);
-            *vp++ = VERT(x + 1, y + 1);
+            *vp++ = VERT(x, z);
+            *vp++ = VERT(x + 1, z + 1);
+            *vp++ = VERT(x + 1, z);
 
-            *vp++ = VERT(x, y);
-            *vp++ = VERT(x + 1, y + 1);
-            *vp++ = VERT(x, y + 1);
+            *vp++ = VERT(x, z);
+            *vp++ = VERT(x, z + 1);
+            *vp++ = VERT(x + 1, z + 1);
         }
 #undef VERT
     }
