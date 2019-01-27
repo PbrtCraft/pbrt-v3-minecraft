@@ -61,6 +61,7 @@
 #include "integrators/volpath.h"
 #include "integrators/whitted.h"
 #include "lights/diffuse.h"
+#include "lights/texlight.h"
 #include "lights/distant.h"
 #include "lights/goniometric.h"
 #include "lights/infinite.h"
@@ -775,6 +776,10 @@ std::shared_ptr<AreaLight> MakeAreaLight(const std::string &name,
     if (name == "area" || name == "diffuse")
         area = CreateDiffuseAreaLight(light2world, mediumInterface.outside,
                                       paramSet, shape);
+    else if (name == "texlight")
+        area = CreateTextureAreaLight(light2world, mediumInterface.outside,
+                                      paramSet, shape,
+                                      &*graphicsState.spectrumTextures);
     else
         Warning("Area light \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();

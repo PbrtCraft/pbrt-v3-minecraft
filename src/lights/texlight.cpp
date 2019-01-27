@@ -31,6 +31,7 @@
  */
 
 // lights/diffuse.cpp*
+#include "textures/constant.h"
 #include "lights/diffuse.h"
 #include "paramset.h"
 #include "sampling.h"
@@ -42,11 +43,14 @@ namespace pbrt {
 // TextureAreaLight Method Definitions
 TextureAreaLight::TextureAreaLight(const Transform &LightToWorld,
                                    const MediumInterface &mediumInterface,
-                                   const Spectrum &Lemit, int nSamples,
-                                   const std::shared_ptr<Shape> &shape)
+                                   const Spectrum &scale, int nSamples,
+                                   const std::shared_ptr<Shape> &shape,
+                                   std::shared_ptr<Texture<Spectrum>> Lemit)
     : AreaLight(LightToWorld, mediumInterface, nSamples),
       Lemit(Lemit),
+      scale(scale),
       shape(shape),
+      Lemit(Lemit),
       area(shape->Area()) {
     // Warn if light has transformation with non-uniform scale, though not
     // for Triangles, since this doesn't matter for them.
@@ -120,14 +124,28 @@ void TextureAreaLight::Pdf_Le(const Ray &ray, const Normal3f &n, Float *pdfPos,
 
 std::shared_ptr<AreaLight> CreateTextureAreaLight(
     const Transform &light2world, const Medium *medium,
-    const ParamSet &paramSet, const std::shared_ptr<Shape> &shape) {
-    Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
+    const ParamSet &paramSet, const std::shared_ptr<Shape> &shape,
+    std::map<std::string, std::shared_ptr<Texture<Spectrum>>> *spectrumTextures) {
     Spectrum sc = paramSet.FindOneSpectrum("scale", Spectrum(1.0));
     int nSamples = paramSet.FindOneInt("samples",
                                        paramSet.FindOneInt("nsamples", 1));
+
+    std::shared_ptr<Texture<Float>> Lemit;
+    std::string LemitName = params.FindTexture("L");
+    if (LemitName != "") {
+        if (spectrumTextures->find(LemitName) != spectrumTextures->end())
+            Lemit = (*spectrumTextures)[LemitName];
+        else
+            Error("Couldn't find spectrum texture \"%s\" for \"L\" parameter",
+                  LemitName.c_str());
+    } else { 
+        Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
+        alphaTex.reset(new ConstantTexture<Spectrum>(0.f));
+    }
+
     if (PbrtOptions.quickRender) nSamples = std::max(1, nSamples / 4);
-    return std::make_shared<TextureAreaLight>(light2world, medium, L * sc,
-                                              nSamples, shape, twoSided);
+    return std::make_shared<TextureAreaLight>(light2world, medium, sc,
+                                              nSamples, shape, Lemit);
 }
 
 }  // namespace pbrt

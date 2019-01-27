@@ -65,18 +65,16 @@ class TextureAreaLight : public AreaLight {
 
   protected:
     // TextureAreaLight Protected Data
-    const Spectrum Lemit;
+    std::shared_ptr<Texture<Spectrum>> Lemit;
     std::shared_ptr<Shape> shape;
-
-    // Added after book publication: by default, TextureAreaLights still
-    // only emit in the hemimsphere around the surface normal.  However,
-    // this behavior can now be overridden to give emission on both sides.
+    const Spectrum scale;
     const Float area;
 };
 
 std::shared_ptr<AreaLight> CreateTexLightAreaLight(
     const Transform &light2world, const Medium *medium,
-    const ParamSet &paramSet, const std::shared_ptr<Shape> &shape);
+    const ParamSet &paramSet, const std::shared_ptr<Shape> &shape,
+    std::map<std::string, std::shared_ptr<Texture<Spectrum>>> *spectrumTextures);
 
 }  // namespace pbrt
 
