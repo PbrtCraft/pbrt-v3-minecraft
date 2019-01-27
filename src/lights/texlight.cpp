@@ -30,9 +30,9 @@
 
  */
 
-// lights/diffuse.cpp*
+// lights/texlight.cpp*
 #include "textures/constant.h"
-#include "lights/diffuse.h"
+#include "lights/texlight.h"
 #include "paramset.h"
 #include "sampling.h"
 #include "shapes/triangle.h"
@@ -47,7 +47,6 @@ TextureAreaLight::TextureAreaLight(const Transform &LightToWorld,
                                    const std::shared_ptr<Shape> &shape,
                                    std::shared_ptr<Texture<Spectrum>> Lemit)
     : AreaLight(LightToWorld, mediumInterface, nSamples),
-      Lemit(Lemit),
       scale(scale),
       shape(shape),
       Lemit(Lemit),
@@ -64,11 +63,11 @@ TextureAreaLight::TextureAreaLight(const Transform &LightToWorld,
 }
 
 Spectrum TextureAreaLight::Power() const {
-    return Lemit * area * Pi;
+    return scale * area * Pi;
 }
 
 Spectrum TextureAreaLight::L(const Interaction &intr, const Vector3f &w) const {
-    return Dot(intr.n, w) > 0 ? Lemit : Spectrum(0.f);
+    return Dot(intr.n, w) > 0 ? scale : Spectrum(0.f);
 }
 
 Spectrum TextureAreaLight::Sample_Li(const Interaction &ref, const Point2f &u,
@@ -83,7 +82,13 @@ Spectrum TextureAreaLight::Sample_Li(const Interaction &ref, const Point2f &u,
     }
     *wi = Normalize(pShape.p - ref.p);
     *vis = VisibilityTester(ref, pShape);
-    return L(pShape, -*wi);
+    
+    Ray ray(ref.p, *wi);
+    Float hit;
+    SurfaceInteraction isect;
+    shape->Intersect(ray, &hit, &isect, false);
+
+    return L(pShape, -*wi)*Lemit->Evaluate(isect);
 }
 
 Float TextureAreaLight::Pdf_Li(const Interaction &ref,
@@ -109,7 +114,13 @@ Spectrum TextureAreaLight::Sample_Le(const Point2f &u1, const Point2f &u2,
     CoordinateSystem(n, &v1, &v2);
     w = w.x * v1 + w.y * v2 + w.z * n;
     *ray = pShape.SpawnRay(w);
-    return L(pShape, w);
+
+    Ray test_ray(pShape.p + w, -w);
+    Float hit;
+    SurfaceInteraction isect;
+    shape->Intersect(test_ray, &hit, &isect, false);
+
+    return L(pShape, w)*Lemit->Evaluate(isect);
 }
 
 void TextureAreaLight::Pdf_Le(const Ray &ray, const Normal3f &n, Float *pdfPos,
@@ -118,8 +129,7 @@ void TextureAreaLight::Pdf_Le(const Ray &ray, const Normal3f &n, Float *pdfPos,
     Interaction it(ray.o, n, Vector3f(), Vector3f(n), ray.time,
                    mediumInterface);
     *pdfPos = shape->Pdf(it);
-    *pdfDir = twoSided ? (.5 * CosineHemispherePdf(AbsDot(n, ray.d)))
-                       : CosineHemispherePdf(Dot(n, ray.d));
+    *pdfDir = CosineHemispherePdf(Dot(n, ray.d));
 }
 
 std::shared_ptr<AreaLight> CreateTextureAreaLight(
@@ -130,8 +140,8 @@ std::shared_ptr<AreaLight> CreateTextureAreaLight(
     int nSamples = paramSet.FindOneInt("samples",
                                        paramSet.FindOneInt("nsamples", 1));
 
-    std::shared_ptr<Texture<Float>> Lemit;
-    std::string LemitName = params.FindTexture("L");
+    std::shared_ptr<Texture<Spectrum>> Lemit;
+    std::string LemitName = paramSet.FindTexture("L");
     if (LemitName != "") {
         if (spectrumTextures->find(LemitName) != spectrumTextures->end())
             Lemit = (*spectrumTextures)[LemitName];
@@ -140,7 +150,7 @@ std::shared_ptr<AreaLight> CreateTextureAreaLight(
                   LemitName.c_str());
     } else { 
         Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
-        alphaTex.reset(new ConstantTexture<Spectrum>(0.f));
+        Lemit.reset(new ConstantTexture<Spectrum>(L));
     }
 
     if (PbrtOptions.quickRender) nSamples = std::max(1, nSamples / 4);

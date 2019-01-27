@@ -50,8 +50,10 @@ class TextureAreaLight : public AreaLight {
   public:
     // TextureAreaLight Public Methods
     TextureAreaLight(const Transform &LightToWorld,
-                     const MediumInterface &mediumInterface, const Spectrum &Le,
-                     int nSamples, const std::shared_ptr<Shape> &shape)
+                     const MediumInterface &mediumInterface,
+                     const Spectrum &scale, int nSamples,
+                     const std::shared_ptr<Shape> &shape,
+                     std::shared_ptr<Texture<Spectrum>> Lemit);
     Spectrum L(const Interaction &intr, const Vector3f &w) const;
     Spectrum Power() const;
     Spectrum Sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wo,
@@ -71,7 +73,7 @@ class TextureAreaLight : public AreaLight {
     const Float area;
 };
 
-std::shared_ptr<AreaLight> CreateTexLightAreaLight(
+std::shared_ptr<AreaLight> CreateTextureAreaLight(
     const Transform &light2world, const Medium *medium,
     const ParamSet &paramSet, const std::shared_ptr<Shape> &shape,
     std::map<std::string, std::shared_ptr<Texture<Spectrum>>> *spectrumTextures);
