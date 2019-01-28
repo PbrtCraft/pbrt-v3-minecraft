@@ -67,7 +67,11 @@ Spectrum TextureAreaLight::Power() const {
 }
 
 Spectrum TextureAreaLight::L(const Interaction &intr, const Vector3f &w) const {
-    return Dot(intr.n, w) > 0 ? scale : Spectrum(0.f);
+    Ray ray(intr.p+w, -w);
+    Float hit;
+    SurfaceInteraction isect;
+    bool ok = shape->Intersect(ray, &hit, &isect, false);
+    return ok ? scale*Lemit->Evaluate(isect) : 0.;
 }
 
 Spectrum TextureAreaLight::Sample_Li(const Interaction &ref, const Point2f &u,
@@ -83,12 +87,7 @@ Spectrum TextureAreaLight::Sample_Li(const Interaction &ref, const Point2f &u,
     *wi = Normalize(pShape.p - ref.p);
     *vis = VisibilityTester(ref, pShape);
     
-    Ray ray(ref.p, *wi);
-    Float hit;
-    SurfaceInteraction isect;
-    shape->Intersect(ray, &hit, &isect, false);
-
-    return L(pShape, -*wi)*Lemit->Evaluate(isect);
+    return L(pShape, -*wi);
 }
 
 Float TextureAreaLight::Pdf_Li(const Interaction &ref,
@@ -115,12 +114,7 @@ Spectrum TextureAreaLight::Sample_Le(const Point2f &u1, const Point2f &u2,
     w = w.x * v1 + w.y * v2 + w.z * n;
     *ray = pShape.SpawnRay(w);
 
-    Ray test_ray(pShape.p + w, -w);
-    Float hit;
-    SurfaceInteraction isect;
-    shape->Intersect(test_ray, &hit, &isect, false);
-
-    return L(pShape, w)*Lemit->Evaluate(isect);
+    return L(pShape, w);
 }
 
 void TextureAreaLight::Pdf_Le(const Ray &ray, const Normal3f &n, Float *pdfPos,
@@ -149,8 +143,7 @@ std::shared_ptr<AreaLight> CreateTextureAreaLight(
             Error("Couldn't find spectrum texture \"%s\" for \"L\" parameter",
                   LemitName.c_str());
     } else { 
-        Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
-        Lemit.reset(new ConstantTexture<Spectrum>(L));
+        Error("Couldn't find L Texture name.");
     }
 
     if (PbrtOptions.quickRender) nSamples = std::max(1, nSamples / 4);
