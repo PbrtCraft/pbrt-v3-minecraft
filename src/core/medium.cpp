@@ -217,4 +217,30 @@ Float HenyeyGreenstein::p(const Vector3f &wo, const Vector3f &wi) const {
     return PhaseHG(Dot(wo, wi), g);
 }
 
+// Rayleigh Method Definitions
+Float Rayleigh::Sample_p(const Vector3f &wo, Vector3f *wi,
+                                 const Point2f &u) const {
+    ProfilePhase _(Prof::PhaseFuncSampling);
+    // Compute $\cos \theta$ for Rayleigh sample
+    // Reference: Importance sampling the Rayleigh phase function
+    Float x = u[0]*2 - 1;
+    Float k = -cbrt(2*x + sqrt(4*x*x + 1));
+    Float cosTheta = k - 1/k;
+
+    // Compute direction _wi_ for Rayleigh sample
+    Float sinTheta = std::sqrt(std::max((Float)0, 1 - cosTheta * cosTheta));
+    Float phi = 2 * Pi * u[1];
+    Vector3f v1, v2;
+    CoordinateSystem(wo, &v1, &v2);
+    *wi = SphericalDirection(sinTheta, cosTheta, phi, v1, v2, -wo);
+    return PhaseRayleigh(cosTheta);
+}
+
+Float Rayleigh::p(const Vector3f &wo, const Vector3f &wi) const {
+    ProfilePhase _(Prof::PhaseFuncEvaluation);
+    Float cosTheta = Dot(wo, wi);
+    return PhaseRayleigh(cosTheta);
+}
+
+
 }  // namespace pbrt

@@ -116,6 +116,7 @@
 #include "textures/wrinkled.h"
 #include "media/grid.h"
 #include "media/homogeneous.h"
+#include "media/rayleigh.h"
 
 #include <map>
 #include <stdio.h>
@@ -712,6 +713,8 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
     Medium *m = NULL;
     if (name == "homogeneous") {
         m = new HomogeneousMedium(sig_a, sig_s, g);
+    } else if (name == "rayleigh") {
+        m = new RayleighMedium(sig_a, sig_s);
     } else if (name == "heterogeneous") {
         int nitems;
         const Float *data = paramSet.FindFloat("density", &nitems);

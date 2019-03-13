@@ -71,6 +71,10 @@ inline Float PhaseHG(Float cosTheta, Float g) {
     return Inv4Pi * (1 - g * g) / (denom * std::sqrt(denom));
 }
 
+inline Float PhaseRayleigh(Float cosTheta) {
+    return 3.f/(16.f*M_PI) * (1 + cosTheta * cosTheta);
+}
+
 // Medium Declarations
 class Medium {
   public:
@@ -97,6 +101,20 @@ class HenyeyGreenstein : public PhaseFunction {
   private:
     const Float g;
 };
+
+// HenyeyGreenstein Declarations
+class Rayleigh : public PhaseFunction {
+  public:
+    // HenyeyGreenstein Public Methods
+    Rayleigh() {}
+    Float p(const Vector3f &wo, const Vector3f &wi) const;
+    Float Sample_p(const Vector3f &wo, Vector3f *wi,
+                   const Point2f &sample) const;
+    std::string ToString() const {
+        return StringPrintf("[ Rayleigh ]");
+    }
+};
+
 
 // MediumInterface Declarations
 struct MediumInterface {
