@@ -1,5 +1,7 @@
 # pbrt-v3-minecraft
 
+![](https://travis-ci.org/PbrtCraft/pbrt-v3-minecraft.svg?branch=master)
+
 [Origin pbrt-v3 README](originREADME.md)
 
 ## Change
