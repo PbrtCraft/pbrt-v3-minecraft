@@ -46,8 +46,7 @@ class Quad : public Shape {
     // Quad Private Method 
     const Float l1, l2, dir, u0, v0, u1, v1, Du, Dv;
     bool inRange(Float x, Float y) const {
-        return -l1/2 <= x and x <= l1/2 and
-               -l2/2 <= y and y <= l2/2;
+        return (-l1/2 <= x) && (x <= l1/2) && (-l2/2 <= y) && (y <= l2/2);
     }
 
     std::shared_ptr<Texture<Float>> alphaMask;

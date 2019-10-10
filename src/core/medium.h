@@ -72,7 +72,8 @@ inline Float PhaseHG(Float cosTheta, Float g) {
 }
 
 inline Float PhaseRayleigh(Float cosTheta) {
-    return 3.f/(16.f*M_PI) * (1 + cosTheta * cosTheta);
+    const Float pi = 3.1415926;
+    return 3.f/(16.f*pi) * (1 + cosTheta * cosTheta);
 }
 
 // Medium Declarations

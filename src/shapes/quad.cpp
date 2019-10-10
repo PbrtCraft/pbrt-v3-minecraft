@@ -17,11 +17,11 @@ bool QuadX::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     if(ray.d.x == 0) return false;
 
     Float thit = -ray.o.x/ray.d.x;
-    if (thit <= 0 or thit >= ray.tMax)
+    if (thit <= 0 || thit >= ray.tMax)
         return false;
 
     Point3f phit = ray(thit);
-    if (not inRange(phit.y, phit.z))
+    if (!inRange(phit.y, phit.z))
         return false;
     
     Float u = phit.y/l1 +.5, v = phit.z/l2 +.5;
@@ -77,11 +77,11 @@ bool QuadY::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     if(ray.d.y == 0) return false;
 
     Float thit = -ray.o.y/ray.d.y;
-    if (thit <= 0 or thit >= ray.tMax)
+    if (thit <= 0 || thit >= ray.tMax)
         return false;
 
     Point3f phit = ray(thit);
-    if (not inRange(phit.x, phit.z))
+    if (!inRange(phit.x, phit.z))
         return false;
 
     Float u = phit.x/l1 +.5, v = phit.z/l2 +.5;
@@ -137,11 +137,11 @@ bool QuadZ::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     if(ray.d.z == 0) return false;
 
     Float thit = -ray.o.z/ray.d.z;
-    if (thit <= 0 or thit >= ray.tMax)
+    if (thit <= 0 || thit >= ray.tMax)
         return false;
 
     Point3f phit = ray(thit);
-    if (not inRange(phit.y, phit.x))
+    if (!inRange(phit.y, phit.x))
         return false;
 
     Float u = phit.y/l1 +.5, v = phit.x/l2 +.5;
